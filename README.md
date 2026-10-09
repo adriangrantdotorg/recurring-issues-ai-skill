@@ -36,6 +36,7 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 - 🎯 **Fixes the source, not the screen** — one change where the wrong thing is made
 - 🧹 **Catches every copy** — sweeps the codebase, including the twin code path
 - 🚨 **A guard that fails on regression** — a test or check, never just a note
+- 🔬 **Reproduces before fixing again** — a fix that didn't hold means a wrong theory
 - 📒 **A ledger for next time** — one greppable line per fix in `RECURRING.md`
 
 ---
