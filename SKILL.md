@@ -5,11 +5,11 @@ description: "Recognize that a defect the user reports has come up BEFORE and gi
 
 # Recurring issues: second mention → permanent fix
 
-The standard: when the same issue is mentioned **two or more times**, a patch
+When the same issue is mentioned **two or more times**, a patch
 is no longer acceptable — the fix must make the class impossible to reintroduce silently.
 Sessions cannot see each other, so a repeat ALWAYS looks new unless you check history first.
-A keycap misalignment can reach a third report before anyone says "this isn't the first
-time", while the cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) has
+A misalignment bug can reach a third report before the user has to say "this isn't the first
+time", while the cause (glyphs missing from the app's fonts, six separate styles for one element) has
 been there all along.
 
 ## 1. Detect — before touching code for any reported defect
@@ -26,8 +26,8 @@ grep -niE '<words>' CLAUDE.md                           # project gotchas / stan
 git log --oneline -i --grep='<word>' | head -20         # past fix commits
 ```
 
-When the project keeps issue notes (an issues folder), grep those
-too — `grep -rliE '<words>' "<issues folder>"` — and the session transcripts as
+When the project keeps issue notes, grep those
+too — `grep -rliE '<words>' "<issue notes folder>"` — and the session transcripts as
 a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 
 **Discrimination**
@@ -37,7 +37,7 @@ a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 | Same SYMPTOM, any surface or cause (keycaps misaligned in Settings, then the strip) | A different symptom in the same component |
 | An earlier fix that addressed one instance | A new feature request that touches the same area |
 | The user's own words calling it a repeat — even with no ledger hit | |
-| The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
+| The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (a filter change left an excluded item in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
 
 | A WRITTEN RULE already covered the class but named it too narrowly (a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
 
@@ -54,17 +54,26 @@ mode) in the same fix — the narrow wording is the second producer.
    one new component / function. Patching the screen in the screenshot is the failure mode.
 2. **Sweep every instance.** `grep` the whole codebase for the pattern; migrate all of them
    in the same change, not only the one reported. **Include the TWINS**: when a flow
-   has two paths (new item vs existing; web vs native; edit vs preview mode),
-   the same defect or feature almost always exists on the other path — gaps usually
-   come from fixing one path only. Name the twin in the fix and give it the same test.
+   has two paths (new item vs linked one; web vs native; edit vs preview mode),
+   the same defect or feature almost always exists on the other path — fixing one path only
+   leaves the same gap open on the other. Name the twin in the fix and give it the same test.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
    lint rule, a build-script check, or a hook. A note alone is not a guard. Pattern that
-   worked: a test that scans `src/**/*.tsx` for the banned
+   works: a test that scans `src/**/*.tsx` for the banned
    shape (raw `<kbd`, a chord printed as JSX text) and lists every offender with file:line.
    Another pattern: a test that scans source
    for banned lifecycle listeners (e.g. `addEventListener("blur"` or `.onblur` on inline rename
    elements) to prevent fragile synthetic commit triggers. Make the guard's failure message say
    what to use instead.
+   **Swift app with no Xcode project or Package.swift:** put
+   the guard in `tests/<Name>/main.swift` (top-level code compiles only in a file named
+   `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
+   `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
+   installed app, so a failure leaves the working app in place. Keep window-showing code out of
+   that set, since a headless test should never put a window on screen, so split a view class into its own file. Prove the guard bites by compiling it
+   once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
+   fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
+   `NSLayoutManager` and compare rects), not only a source shape.
 4. **Written down with its trigger** — the project CLAUDE.md entry says what the class is,
    how a future session detects it (a grep, a measurement), and where the guard lives.
 
@@ -73,7 +82,7 @@ a failing-then-passing test, a count that went to zero.
 
 **A fix that did not hold means your model of the bug is wrong: reproduce it where the user sees it
 before writing another fix.** *Trigger:* a repeat report right after a fix you had
-"verified". *Discrimination:* an email app's forward To-field cursor got three fixes in one day (Tab order, an
+"verified". *Discrimination:* a missing text cursor in one field got three fixes in one day (Tab order, an
 inert frame, an activation repair), each passing a headless probe that could not show the symptom at
 all (an inactive window draws no caret); a log of focus events could not either. *Action:* stop
 theorizing; reproduce the exact symptom yourself in the user's real environment (the installed app, the
