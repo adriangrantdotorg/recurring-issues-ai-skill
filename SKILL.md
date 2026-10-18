@@ -5,11 +5,11 @@ description: "Recognize that a defect the user reports has come up BEFORE and gi
 
 # Recurring issues: second mention → permanent fix
 
-When the same issue is mentioned **two or more times**, a patch
+The standard: when the same issue is mentioned **two or more times**, a patch
 is no longer acceptable — the fix must make the class impossible to reintroduce silently.
 Sessions cannot see each other, so a repeat ALWAYS looks new unless you check history first.
-A misalignment bug can reach a third report before the user has to say "this isn't the first
-time", while the cause (glyphs missing from the app's fonts, six separate styles for one element) has
+In one app, a keycap misalignment reached a third report before the user had to say "this isn't the first
+time"; the cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) had
 been there all along.
 
 ## 1. Detect — before touching code for any reported defect
@@ -26,8 +26,8 @@ grep -niE '<words>' CLAUDE.md                           # project gotchas / stan
 git log --oneline -i --grep='<word>' | head -20         # past fix commits
 ```
 
-When the project keeps issue notes, grep those
-too — `grep -rliE '<words>' "<issue notes folder>"` — and the session transcripts as
+When the project keeps issue notes (a notes folder, an issue tracker export), grep those
+too — `grep -rliE '<words>' "<notes folder>"` — and the session transcripts as
 a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 
 **Discrimination**
@@ -37,9 +37,9 @@ a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 | Same SYMPTOM, any surface or cause (keycaps misaligned in Settings, then the strip) | A different symptom in the same component |
 | An earlier fix that addressed one instance | A new feature request that touches the same area |
 | The user's own words calling it a repeat — even with no ledger hit | |
-| The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (a filter change left an excluded item in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
+| The same CLASS in a new flow: an earlier fix covered one path (e.g. a restored selection the view no longer held) and the report arrives through another (e.g. an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
 
-| A WRITTEN RULE already covered the class but named it too narrowly (a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
+| A WRITTEN RULE already covered the class but named it too narrowly (e.g. a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
 
 When the signals can't be read, **treat it as a repeat**.
 
@@ -54,9 +54,9 @@ mode) in the same fix — the narrow wording is the second producer.
    one new component / function. Patching the screen in the screenshot is the failure mode.
 2. **Sweep every instance.** `grep` the whole codebase for the pattern; migrate all of them
    in the same change, not only the one reported. **Include the TWINS**: when a flow
-   has two paths (new item vs linked one; web vs native; edit vs preview mode),
+   has two paths (new item vs linked; web vs native; edit vs preview mode),
    the same defect or feature almost always exists on the other path — fixing one path only
-   leaves the same gap open on the other. Name the twin in the fix and give it the same test.
+   leaves the gap open on the other. Name the twin in the fix and give it the same test.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
    lint rule, a build-script check, or a hook. A note alone is not a guard. Pattern that
    works: a test that scans `src/**/*.tsx` for the banned
@@ -70,7 +70,8 @@ mode) in the same fix — the narrow wording is the second producer.
    `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
    `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
    installed app, so a failure leaves the working app in place. Keep window-showing code out of
-   that set, since a headless test should never put a window on screen, so split a view class into its own file. Prove the guard bites by compiling it
+   that set, so running the guard never opens a window on screen; split a view class into its
+   own file if needed. Prove the guard bites by compiling it
    once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
    fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
    `NSLayoutManager` and compare rects), not only a source shape.
@@ -80,13 +81,13 @@ mode) in the same fix — the narrow wording is the second producer.
 Verify with a **measurement**, not a look: geometry (`getBoundingClientRect` centers equal),
 a failing-then-passing test, a count that went to zero.
 
-**A fix that did not hold means your model of the bug is wrong: reproduce it where the user sees it
+**A fix that did not hold means your model of the bug is wrong: reproduce it where THE USER sees it
 before writing another fix.** *Trigger:* a repeat report right after a fix you had
-"verified". *Discrimination:* a missing text cursor in one field got three fixes in one day (Tab order, an
+"verified". *Discrimination:* an email app's forward To-field cursor got three fixes in a row (Tab order, an
 inert frame, an activation repair), each passing a headless probe that could not show the symptom at
 all (an inactive window draws no caret); a log of focus events could not either. *Action:* stop
 theorizing; reproduce the exact symptom yourself in the user's real environment (the installed app, the
-active window; ask in chat when that needs the user's screen) and confirm the reproduction is valid; then
+active window; ask the user when that needs their screen) and confirm the reproduction is valid; then
 bisect with ONE diagnostic build whose suspects are runtime switches, and ship only the change that
 flips the measured symptom. Delete the diagnostics and any logging that did not help afterwards.
 
