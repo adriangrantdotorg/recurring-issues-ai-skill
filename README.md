@@ -31,11 +31,11 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 
 ![The same repeat bug report with and without the skill: without it, the bug is patched, comes back and is patched again; with it, the AI checks history, fixes the source and adds a guard, and the bug is fixed for good](docs/media/with-vs-without-skill.svg)
 
-- 🔎 **Spots repeats on its own** — checks the ledger, project notes and git history first
-- 🗣️ **Hears the word "again"** — also "still", "keeps happening", "I already asked"
+- 🔎 **Spots repeats on its own** — hears "again" or "still", then checks the ledger and git history
 - 🎯 **Fixes the source, not the screen** — one change where the wrong thing is made
 - 🧹 **Catches every copy** — sweeps the codebase, including the twin code path
-- 🚨 **A guard that fails on regression** — a test or check, never just a note
+- 🚨 **A guard that fails like production** — a test that breaks what real use breaks
+- 📏 **Widens a rule that was too narrow** — when a written rule missed the bug
 - 🔬 **Reproduces before fixing again** — a fix that didn't hold means a wrong theory
 - 📒 **A ledger for next time** — one greppable line per fix in `RECURRING.md`
 
