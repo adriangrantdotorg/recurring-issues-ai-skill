@@ -8,9 +8,9 @@ description: "Recognize that a defect the user reports has come up BEFORE and gi
 The standard: when the same issue is mentioned **two or more times**, a patch
 is no longer acceptable — the fix must make the class impossible to reintroduce silently.
 Sessions cannot see each other, so a repeat ALWAYS looks new unless you check history first.
-A defect can reach a third report before anyone says "this isn't the first
-time", even though the root cause (for example, glyphs missing from an app's fonts, or several
-separate copies of one style) has been there all along.
+A keycap misalignment can reach a third report before anyone notices it is a repeat; the
+cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) had
+been there all along.
 
 ## 1. Detect — before touching code for any reported defect
 
@@ -26,7 +26,7 @@ grep -niE '<words>' CLAUDE.md                           # project gotchas / stan
 git log --oneline -i --grep='<word>' | head -20         # past fix commits
 ```
 
-When the project keeps issue notes, grep those
+When the project keeps issue notes (a notes folder, an issue export), grep those
 too — `grep -rliE '<words>' "<notes folder>"` — and the session transcripts as
 a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 
@@ -37,7 +37,7 @@ a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 | Same SYMPTOM, any surface or cause (keycaps misaligned in Settings, then the strip) | A different symptom in the same component |
 | An earlier fix that addressed one instance | A new feature request that touches the same area |
 | The user's own words calling it a repeat — even with no ledger hit | |
-| The same CLASS in a new flow: an earlier fix covered one path (e.g. a restored selection the view no longer held) and the report arrives through another (e.g. a filter change left an excluded item in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
+| The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
 
 | A WRITTEN RULE already covered the class but named it too narrowly (e.g. a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
 
@@ -54,7 +54,7 @@ mode) in the same fix — the narrow wording is the second producer.
    one new component / function. Patching the screen in the screenshot is the failure mode.
 2. **Sweep every instance.** `grep` the whole codebase for the pattern; migrate all of them
    in the same change, not only the one reported. **Include the TWINS**: when a flow
-   has two paths (new item vs existing one; web vs native; edit vs preview mode),
+   has two paths (new item vs linked; web vs native; edit vs preview mode),
    the same defect or feature almost always exists on the other path — fixing one path only
    leaves the gap open on the other. Name the twin in the fix and give it the same test.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
@@ -70,8 +70,8 @@ mode) in the same fix — the narrow wording is the second producer.
    `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
    `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
    installed app, so a failure leaves the working app in place. Keep window-showing code out of
-   that set so the test runs headless without putting a window on screen; split a view
-   class into its own file. Prove the guard bites by compiling it
+   that set: a headless test binary should never order a
+   window in, so split a view class into its own file. Prove the guard bites by compiling it
    once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
    fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
    `NSLayoutManager` and compare rects), not only a source shape.
@@ -83,20 +83,20 @@ a failing-then-passing test, a count that went to zero.
 
 **A fix whose test can't fail the way production fails is not a guard.** *Trigger:* a fix
 depends on an outside resource being there later: a file in a scratchpad or worktree, a cache, a server, a page path
-saved in a record. *Discrimination:* a fix for missing pictures was tested against a fixture page that
-never disappears, while most real pages were deleted along with their temporary folders; the
-test passed and the feature broke anyway. *Action:* the guard deletes (or breaks) the resource the way production
+saved in a record. *Discrimination:* a fix for pictures in a review screen was tested against a fixture page that
+never disappears, while most real pages were later deleted with their scratchpads and worktrees; the
+test passed and the review went back to text. *Action:* the guard deletes (or breaks) the resource the way production
 does, then checks the result still holds; when the resource is known to vanish, copy what you need at the moment it
-exists, and make the fallback LOUD (a red line on the
+exists (for example, keep pages and their pictures in a `kept/` folder), and make the fallback LOUD (a red line on the
 card), never a quiet degrade.
 
 **A fix that did not hold means your model of the bug is wrong: reproduce it where the user sees it
 before writing another fix.** *Trigger:* a repeat report right after a fix you had
-"verified". *Discrimination:* a text-field cursor bug got three fixes in one day (Tab order, an
+"verified". *Discrimination:* a mail app's forward To-field cursor got three fixes in one day (Tab order, an
 inert frame, an activation repair), each passing a headless probe that could not show the symptom at
 all (an inactive window draws no caret); a log of focus events could not either. *Action:* stop
 theorizing; reproduce the exact symptom yourself in the user's real environment (the installed app, the
-active window; ask the user when that needs their screen) and confirm the reproduction is valid; then
+active window; ask in chat when that needs the user's screen) and confirm the reproduction is valid; then
 bisect with ONE diagnostic build whose suspects are runtime switches, and ship only the change that
 flips the measured symptom. Delete the diagnostics and any logging that did not help afterwards.
 
@@ -105,6 +105,14 @@ flips the measured symptom. Delete the diagnostics and any logging that did not 
 First line of the reply: **`🔁 Second report of <symptom> — permanent fix`** (third, fourth…
 as counted). Then, briefly: why it kept recurring (the real cause), what now makes it
 impossible (the producer + the guard), and the measurement.
+
+**A gap the fix leaves open carries its fix in the same breath.** *Trigger:* your report names
+something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix
+leaves the reader asking what the fix is; when you state a problem, state a solution, briefly.
+*Action:* small and safe → fix it before replying and report it as fixed; otherwise one line `❌ Not fixed: <what goes
+wrong>`, then your fix in one or two lines, then the question (both options
+named, a short table, answer words = column names). A fix that needs the user's OK first (a background watcher, a privacy
+setting) is still named, never left out.
 
 ## 4. Ledger — after EVERY defect fix, repeat or not
 
