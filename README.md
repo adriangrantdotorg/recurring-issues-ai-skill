@@ -2,7 +2,7 @@
 
 ![Recurring Issues AI Skill Banner](banner.png)
 
-> An AI coding skill that permanently quashes repeat bugs.
+> An AI coding skill that spots a bug you've reported before and fixes it so it can't come back.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE.txt) [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-SKILL.md-8A2BE2.svg)](https://github.com/anthropics/skills) [![Version](https://img.shields.io/github/v/release/adriangrantdotorg/recurring-issues-ai-skill?color=orange&label=Version)](https://github.com/adriangrantdotorg/recurring-issues-ai-skill/releases) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/adriangrantdotorg/recurring-issues-ai-skill/pulls)
 
@@ -32,10 +32,10 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 ![The same repeat bug report with and without the skill: without it, the bug is patched, comes back and is patched again; with it, the AI checks history, fixes the source and adds a guard, and the bug is fixed for good](docs/media/with-vs-without-skill.svg)
 
 - 🔎 **Spots repeats on its own** — hears "again" or "still", then checks the ledger and git history
-- 🎯 **Fixes the source, not the screen** — one change where the wrong thing is made
-- 🧹 **Catches every copy** — sweeps the codebase, including the twin code path
-- 🚨 **A guard that fails like production** — a test that breaks what real use breaks
-- 📏 **Widens a rule that was too narrow** — when a written rule missed the bug
+- 🎯 **Fixes the source, not the screen** — the one helper or tool every path goes through
+- 🧹 **Catches every copy** — sweeps the codebase, twin code paths included
+- 🚨 **Guards that fail like production** — real data samples, proven to fail on the old code
+- 📏 **Widens a rule that was too narrow** — so the next look-alike is caught too
 - 🔬 **Reproduces before fixing again** — a fix that didn't hold means a wrong theory
 - 📒 **A ledger for next time** — one greppable line per fix in `RECURRING.md`
 
