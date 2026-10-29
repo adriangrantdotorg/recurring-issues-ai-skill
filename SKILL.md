@@ -5,10 +5,10 @@ description: "Recognize that a defect the user reports has come up BEFORE and gi
 
 # Recurring issues: second mention → permanent fix
 
-The standard: when the same issue is mentioned **two or more times**, a patch
+When the same issue is mentioned **two or more times**, a patch
 is no longer acceptable — the fix must make the class impossible to reintroduce silently.
 Sessions cannot see each other, so a repeat ALWAYS looks new unless you check history first.
-A typical case: a keycap misalignment reached a third report before the user had to say "this isn't the first
+One keycap misalignment reached a third report before the user had to say "this isn't the first
 time"; the cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) had
 been there all along.
 
@@ -26,8 +26,8 @@ grep -niE '<words>' CLAUDE.md                           # project gotchas / stan
 git log --oneline -i --grep='<word>' | head -20         # past fix commits
 ```
 
-When the project keeps issue notes (a notes folder or a tracker export), grep those
-too — `grep -rliE '<words>' "<issue notes folder>"` — and the session transcripts as
+When the project keeps issue notes (a notes folder or tracker export), grep those
+too — `grep -rliE '<words>' "<notes folder>"` — and the session transcripts as
 a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 
 **Discrimination**
@@ -37,10 +37,10 @@ a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 | Same SYMPTOM, any surface or cause (keycaps misaligned in Settings, then the strip) | A different symptom in the same component |
 | An earlier fix that addressed one instance | A new feature request that touches the same area |
 | The user's own words calling it a repeat — even with no ledger hit | |
-| The same CLASS in a new flow: an earlier fix covered one path (e.g. a restored selection the view no longer held) and the report arrives through another (e.g. an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
+| The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
 
 | A WRITTEN RULE already covered the class but named it too narrowly (e.g. a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
-| The first fix went into ONE instance and a skill NOTE, never into the TOOL that does the action (e.g. an automation opened in the wrong place; an earlier fix changed one script and wrote a note, while the shared helper every path calls kept doing it). A note is not the producer: fix the tool every path goes through, and add a hook or check that blocks the old way | |
+| The first fix went into ONE instance and a skill NOTE, never into the TOOL that does the action (e.g. one script was fixed and a note written, while the shared helper every path calls kept doing it). A note is not the producer: fix the tool every path goes through, and add a hook or check that blocks the old way | |
 
 When the signals can't be read, **treat it as a repeat**.
 
@@ -56,13 +56,13 @@ mode) in the same fix — the narrow wording is the second producer.
 2. **Sweep every instance.** `grep` the whole codebase for the pattern; migrate all of them
    in the same change, not only the one reported. **Include the TWINS**: when a flow
    has two paths (new item vs existing; web vs native; edit vs preview mode),
-   the same defect or feature almost always exists on the other path — fixing one path only
-   leaves the gap open on the other. Name the twin in the fix and give it the same test.
+   the same defect or feature almost always exists on the other path, and fixing one path only
+   leaves gaps. Name the twin in the fix and give it the same test.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
-   lint rule, a build-script check, or a hook. A note alone is not a guard. One pattern that
-   works: a test that scans `src/**/*.tsx` for the banned
+   lint rule, a build-script check, or a hook. A note alone is not a guard. Pattern that
+   works (a `keycap.guard.test.ts`): a test that scans `src/**/*.tsx` for the banned
    shape (raw `<kbd`, a chord printed as JSX text) and lists every offender with file:line.
-   Another pattern: a test that scans source
+   Another pattern (a `rename.test.ts`): a test that scans source
    for banned lifecycle listeners (e.g. `addEventListener("blur"` or `.onblur` on inline rename
    elements) to prevent fragile synthetic commit triggers. Make the guard's failure message say
    what to use instead.
@@ -71,7 +71,7 @@ mode) in the same fix — the narrow wording is the second producer.
    `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
    `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
    installed app, so a failure leaves the working app in place. Keep window-showing code out of
-   that set so the test never puts a window on screen: split a view class into its own file. Prove the guard bites by compiling it
+   that set, so the test binary never orders a window on screen: split a view class into its own file. Prove the guard bites by compiling it
    once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
    fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
    `NSLayoutManager` and compare rects), not only a source shape.
@@ -83,11 +83,11 @@ a failing-then-passing test, a count that went to zero.
 
 **A fix whose test can't fail the way production fails is not a guard.** *Trigger:* a fix
 depends on an outside resource being there later: a file in a scratchpad or worktree, a cache, a server, a page path
-saved in a record. *Discrimination:* a fix for missing pictures in a review screen was tested against a fixture page that
-never disappears, while most real pages were deleted along with their temporary folders; the
+saved in a record. *Discrimination:* a "pictures in the review" fix was tested against a fixture page that
+never disappears, while 44 of 57 real pages were deleted with their scratchpads and worktrees before the weekend; the
 test passed and the review went back to text. *Action:* the guard deletes (or breaks) the resource the way production
 does, then checks the result still holds; when the resource is known to vanish, copy what you need at the moment it
-exists (for example, into a folder kept in the repo), and make the fallback LOUD (a red line on the
+exists (e.g. keep pages and their pictures in a committed `kept/` folder), and make the fallback LOUD (a red line on the
 card), never a quiet degrade.
 
 **A test fed a message shape you INVENTED is not a guard.** *Trigger:* the code under test
@@ -99,7 +99,16 @@ guess and still second best. *Action:* capture one real sample from the running 
 run the CLI) and use it as the fixture, or at least one fixture in that exact shape; name where it came from in a
 comment; prove the guard fails on the old code before calling the fix done.
 
-**A fix that did not hold means your model of the bug is wrong: reproduce it where THE USER sees it
+**A second report the SAME day means the first fix covered instances, not the class: load-test it the way
+production loads it.** *Trigger:* you fixed a hang, freeze or race by moving the
+named callers (two bridge calls off the main thread), and the same symptom comes back. *Discrimination:* the first fix
+held for the calls it moved, but the cause was a shared resource (the dispatch pool) every caller drew on; a name-list
+source scan missed a third caller reached through a shared start function. A clean normal run proves nothing for a
+load-dependent bug. *Action:* reproduce under the real load (a burst of requests while the store change reloads every
+window), `sample` the stuck process and COUNT threads (100+ waiting = pool starvation, not one bad call), fix the
+shared mechanism, and add a runtime guard that recreates the load; keep any source scan only as a second guard.
+
+**A fix that did not hold means your model of the bug is wrong: reproduce it where the USER sees it
 before writing another fix.** *Trigger:* a repeat report right after a fix you had
 "verified". *Discrimination:* the forward To-field cursor got three fixes in one day (Tab order, an
 inert frame, an activation repair), each passing a headless probe that could not show the symptom at
@@ -116,11 +125,10 @@ as counted). Then, briefly: why it kept recurring (the real cause), what now mak
 impossible (the producer + the guard), and the measurement.
 
 **A gap the fix leaves open carries its fix in the same breath.** *Trigger:* your report names
-something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a fix report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix
-leaves the reader asking what the fix is. If you state a problem, state a solution, briefly.
+something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a fix report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix states a
+problem without a solution; keep the fix just as brief.
 *Action:* small and safe → fix it before replying and report it as fixed; otherwise one line `❌ Not fixed: <what goes
-wrong>`, then your fix in one or two lines, then the question, with both options
-named and what each one costs. A fix that needs the user's OK first (a background watcher, a privacy
+wrong>`, then your fix in one or two lines, then a short question that names both options. A fix that needs the user's OK first (a background watcher, a privacy
 setting) is still named, never left out.
 
 ## 4. Ledger — after EVERY defect fix, repeat or not
