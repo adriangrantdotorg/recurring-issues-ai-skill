@@ -35,7 +35,7 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 - 🎯 **Fixes the source, not the screen** — the one helper or tool every path goes through
 - 🧹 **Catches every copy** — every match, plus twins: new vs existing, web vs native
 - 🚨 **Guards that fail like production** — real data samples, proven to fail on the old code
-- 📏 **Widens a rule that was too narrow** — so the next look-alike is caught too
+- 📏 **Fixes the rule, not just the code** — widens rules that were too narrow, deletes templates the AI repeats
 - 🔬 **Reproduces before fixing again** — under real load, where the user actually sees it
 - 🧾 **No loose ends in the report** — every gap left open comes with its fix
 
