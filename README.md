@@ -31,7 +31,7 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 
 ![The same repeat bug report with and without the skill: without it, the bug is patched, comes back and is patched again; with it, the AI checks history, fixes the source and adds a guard, and the bug is fixed for good](docs/media/with-vs-without-skill.svg)
 
-- 🔎 **Spots repeats on its own** — hears "again" or "still", then checks the ledger and git history
+- 🔎 **Spots repeats on its own** — hears "again" or "still", then checks the ledger, git log and bug notes
 - 🎯 **Fixes the source, not the screen** — the one helper or tool every path goes through
 - 🧹 **Catches every copy** — every match, plus twins: new vs existing, web vs native
 - 🚨 **Guards that fail like production** — real data samples, proven to fail on the old code
