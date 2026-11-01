@@ -9,7 +9,7 @@ The standard: when the same issue is mentioned **two or more times**, a patch
 is no longer acceptable — the fix must make the class impossible to reintroduce silently.
 Sessions cannot see each other, so a repeat ALWAYS looks new unless you check history first.
 A keycap misalignment can reach a third report before anyone says "this isn't the first
-time"; the cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) had
+time", though the cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) had
 been there all along.
 
 ## 1. Detect — before touching code for any reported defect
@@ -40,8 +40,8 @@ a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 | The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
 
 | A WRITTEN RULE already covered the class but named it too narrowly (e.g. a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
-| The first fix went into ONE instance and a skill NOTE, never into the TOOL that does the action (e.g. an automation opened the wrong folder; the first fix changed one script and wrote a note, while the shared helper every other path used kept doing it). A note is not the producer: fix the tool every path goes through, and add a hook or check that blocks the old way | |
-| The fix SWAPPED the thing the user objected to for a look-alike (design pages: page screenshots → live scaled frames of the pages → a switcher strip above the page; "I'm still seeing screenshots", then "never include these top frames"). To the user it is the same thing whatever draws it. Fix = remove the whole category (the bare page, nothing added), never a new kind of wrapper | |
+| The first fix went into ONE instance and a skill NOTE, never into the TOOL that does the action (e.g. a reveal action opened in the wrong folder; the first fix patched one script and wrote a note, while the shared helper and other callers kept doing it). A note is not the producer: fix the tool every path goes through, and add a hook or check that blocks the old way | |
+| The fix SWAPPED the thing the user objected to for a look-alike (e.g. page screenshots → live scaled frames of the pages → a switcher strip above the page; "I'm still seeing screenshots", then "never include these top frames"). To the user it is the same thing whatever draws it. Fix = remove the whole category (the bare page, nothing added), never a new kind of wrapper | |
 
 When the signals can't be read, **treat it as a repeat**.
 
@@ -57,22 +57,29 @@ mode) in the same fix — the narrow wording is the second producer.
 2. **Sweep every instance.** `grep` the whole codebase for the pattern; migrate all of them
    in the same change, not only the one reported. **Include the TWINS**: when a flow
    has two paths (new item vs linked item; web vs native; edit vs preview mode),
-   the same defect or feature almost always exists on the other path — three gaps in one day
-   came from fixing one path only. Name the twin in the fix and give it the same test.
+   the same defect or feature almost always exists on the other path — fixing one path only
+   leaves the other one broken. Name the twin in the fix and give it the same test.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
    lint rule, a build-script check, or a hook. A note alone is not a guard. Pattern that
-   works: a test that scans `src/**/*.tsx` for the banned
+   works (e.g. a `keycap.guard.test.ts`): a test that scans `src/**/*.tsx` for the banned
    shape (raw `<kbd`, a chord printed as JSX text) and lists every offender with file:line.
-   Another pattern: a test that scans source
+   Another pattern (e.g. `web/test/rename.test.ts`): a test that scans source
    for banned lifecycle listeners (e.g. `addEventListener("blur"` or `.onblur` on inline rename
    elements) to prevent fragile synthetic commit triggers. Make the guard's failure message say
    what to use instead.
+   **A word scan reads string escapes as breaks.** *Trigger:* a guard or codemod finds a word
+   in source with a letter-boundary check (`(?<![A-Za-z])Name`). *Discrimination:* in source text
+   `\nAcme Ventures` (a firm's name after a line break) the letter before the name is the `n` of `\n`, so a
+   37-file rename skipped an email
+   sign-off and the guard written the same way would have passed it. *Action:* replace `\\[ntr]` with a space
+   before matching; strip a trailing comment only after whitespace (`(^|\s)//`), so a URL's `//` doesn't hide the
+   rest of the line; then drop a probe file holding the real missed line and watch the guard fail before you trust it.
    **Swift app with no Xcode project or Package.swift:** put
    the guard in `tests/<Name>/main.swift` (top-level code compiles only in a file named
    `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
    `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
    installed app, so a failure leaves the working app in place. Keep window-showing code out of
-   that set, so running the guard never puts a window on screen; split a view class into its own file. Prove the guard bites by compiling it
+   that set, so the test binary never puts a window on screen: split a view class into its own file. Prove the guard bites by compiling it
    once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
    fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
    `NSLayoutManager` and compare rects), not only a source shape.
@@ -85,17 +92,17 @@ a failing-then-passing test, a count that went to zero.
 **A fix whose test can't fail the way production fails is not a guard.** *Trigger:* a fix
 depends on an outside resource being there later: a file in a scratchpad or worktree, a cache, a server, a page path
 saved in a record. *Discrimination:* a "pictures in the review" fix was tested against a fixture page that
-never disappears, while most real pages were deleted with their scratchpads and worktrees within days; the
+never disappears, while 44 of 57 real pages were deleted with their scratchpads and worktrees; the
 test passed and the review went back to text. *Action:* the guard deletes (or breaks) the resource the way production
 does, then checks the result still holds; when the resource is known to vanish, copy what you need at the moment it
-exists (for example, a kept folder inside the repo), and make the fallback LOUD (a red line on the
+exists (e.g. keep pages and their pictures in a `design/kept/` folder), and make the fallback LOUD (a red line on the
 card), never a quiet degrade.
 
 **A test fed a message shape you INVENTED is not a guard.** *Trigger:* the code under test
 reads data another program produces (a daemon's WebSocket or HTTP JSON, a CLI's `--json`, a file another app
 writes), and the test builds that data by hand. *Discrimination:* the tests sent `"device": ["id": "x"]` while
-the real daemon sends `"device": "Office Speaker"`; every test passed, and in production every message read as
-"paused", so Repeat Off took a route that did nothing. A shape copied from the producer's docs is better than a
+the real daemon sends `"device": "Office Mac"`; every test passed, and in production every message read as
+"paused", so a repeat-off command took a route that did nothing. A shape copied from the producer's docs is better than a
 guess and still second best. *Action:* capture one real sample from the running producer (`curl` its state route,
 run the CLI) and use it as the fixture, or at least one fixture in that exact shape; name where it came from in a
 comment; prove the guard fails on the old code before calling the fix done.
@@ -120,12 +127,12 @@ fixtures and a quoted mention of the line allowed, so it bites in running sessio
 production loads it.** *Trigger:* you fixed a hang, freeze or race by moving the
 named callers (two bridge calls off the main thread), and the same symptom comes back. *Discrimination:* the first fix
 held for the calls it moved, but the cause was a shared resource (the dispatch pool) every caller drew on; a name-list
-source scan missed a third caller reached through `SyncAllRun.shared.start`. A clean normal run proves nothing for a
+source scan missed a third caller reached through a shared start helper. A clean normal run proves nothing for a
 load-dependent bug. *Action:* reproduce under the real load (a burst of requests while the store change reloads every
 window), `sample` the stuck process and COUNT threads (100+ waiting = pool starvation, not one bad call), fix the
 shared mechanism, and add a runtime guard that recreates the load; keep any source scan only as a second guard.
 
-**A fix that did not hold means your model of the bug is wrong: reproduce it where the USER sees it
+**A fix that did not hold means your model of the bug is wrong: reproduce it where THE USER sees it
 before writing another fix.** *Trigger:* a repeat report right after a fix you had
 "verified". *Discrimination:* the forward To-field cursor got three fixes in one day (Tab order, an
 inert frame, an activation repair), each passing a headless probe that could not show the symptom at
@@ -142,12 +149,14 @@ as counted). Then, briefly: why it kept recurring (the real cause), what now mak
 impossible (the producer + the guard), and the measurement.
 
 **A gap the fix leaves open carries its fix in the same breath.** *Trigger:* your report names
-something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a
-report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix leaves the user asking what the fix is.
+something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a fix report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix leaves the user asking what the fix is; if you state a problem, state a solution, briefly.
 *Action:* small and safe → fix it before replying and report it as fixed; otherwise one line `❌ Not fixed: <what goes
-wrong>`, then your fix in one or two lines, then the question laid out clearly (both options
+wrong>`, then your fix in one or two lines, then the question (both options
 named, a short table, answer words = column names). A fix that needs the user's OK first (a background watcher, a privacy
 setting) is still named, never left out.
+
+Tell the user where the written rule from the checklist was saved (file name and path), in plain words;
+never as Trigger / Discrimination / Action labels.
 
 ## 4. Ledger — after EVERY defect fix, repeat or not
 
