@@ -34,7 +34,7 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 - 🔎 **Spots repeats on its own** — hears "again" or "still", then checks the ledger, git log and bug notes
 - 🎯 **Fixes the source, not the screen** — the one tool every path uses, never a look-alike swap
 - 🧹 **Catches every copy** — every match, plus twins: new vs existing, web vs native
-- 🚨 **Guards that fail like production** — real data, no empty test pages, proven to fail first
+- 🚨 **Guards that fail like production** — real data, every page, neighbours checked, proven to fail first
 - 📏 **Fixes the rule, not just the code** — widens rules that were too narrow, deletes templates the AI repeats
 - 🔬 **Reproduces before fixing again** — under real load, where the user actually sees it
 - 🧾 **No loose ends in the report** — every gap left open comes with its fix
