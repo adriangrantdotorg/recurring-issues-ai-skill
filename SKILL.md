@@ -1,6 +1,6 @@
 ---
 name: recurring-issues-ai-skill
-description: "Recognize that a defect the user reports has come up BEFORE and give it a PERMANENT fix instead of another patch. Use whenever the user reports a bug, visual glitch, misalignment, broken behavior or 'it's doing X again' in any software project — and ALWAYS when the user's message says 'again', 'still', 'this isn't the first time', 'keeps happening', 'I already asked', 'we talked about this', 'find a permanent fix', or when a search of the repo's RECURRING.md / CLAUDE.md / git log finds the same symptom. Holds the history check (where past reports live), the four-part permanent-fix checklist (one producer, full sweep, an automatic guard that fails on regression, a rule with its trigger), the RECURRING.md ledger format, and the report line. Also use after fixing ANY defect, to append the ledger line that lets the next session find it."
+description: "Recognize that a reported defect has come up BEFORE and give it a PERMANENT fix instead of another patch. Use whenever the user reports a bug, visual glitch, misalignment, broken behavior or 'it's doing X again' in any software project — and ALWAYS when the user's message says 'again', 'still', 'this isn't the first time', 'keeps happening', 'I already asked', 'we talked about this', 'find a permanent fix', or when a search of the repo's RECURRING.md / CLAUDE.md / git log finds the same symptom. Holds the history check (where past reports live), the four-part permanent-fix checklist (one producer, full sweep, an automatic guard that fails on regression, a rule with its trigger), the RECURRING.md ledger format, and the report line. Also use after fixing ANY defect, to append the ledger line that lets the next session find it."
 ---
 
 # Recurring issues: second mention → permanent fix
@@ -8,7 +8,7 @@ description: "Recognize that a defect the user reports has come up BEFORE and gi
 The standard: when the same issue is mentioned **two or more times**, a patch
 is no longer acceptable — the fix must make the class impossible to reintroduce silently.
 Sessions cannot see each other, so a repeat ALWAYS looks new unless you check history first.
-A keycap misalignment once reached a third report before the user had to say "this isn't the first
+In one case, a keycap misalignment reached a third report before the user had to say "this isn't the first
 time"; the cause (⌘⇧ glyphs missing from the app's fonts, six separate keycap styles) had
 been there all along.
 
@@ -26,7 +26,7 @@ grep -niE '<words>' CLAUDE.md                           # project gotchas / stan
 git log --oneline -i --grep='<word>' | head -20         # past fix commits
 ```
 
-When the project keeps issue notes (a folder of bug-report notes), grep those
+When the project keeps issue notes (for example a folder of bug notes), grep those
 too — `grep -rliE '<words>' "<notes folder>"` — and the session transcripts as
 a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 
@@ -37,10 +37,10 @@ a last resort (`grep -l -iE '<words>' ~/.claude/projects/<slug>/*.jsonl`).
 | Same SYMPTOM, any surface or cause (keycaps misaligned in Settings, then the strip) | A different symptom in the same component |
 | An earlier fix that addressed one instance | A new feature request that touches the same area |
 | The user's own words calling it a repeat — even with no ledger hit | |
-| The same CLASS in a new flow: an earlier fix covered one path (e.g. a restored selection the view no longer held) and the report arrives through another (e.g. an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
+| The same CLASS in a new flow: an earlier fix covered one path (a restored selection the view no longer held) and the report arrives through another (an account filter change left an excluded email in the pane) | A look-alike whose cause is a different class (a slow fetch is not a stale selection) |
 
 | A WRITTEN RULE already covered the class but named it too narrowly (e.g. a skill said "never put a margin on a LINE"; the `---` rule WIDGET carried the margin and made the cursor jump) | |
-| The first fix went into ONE instance and a skill NOTE, never into the TOOL that does the action (e.g. one script was fixed and a note was written, while the shared helper every other path used kept doing it). A note is not the producer: fix the tool every path goes through, and add a hook or check that blocks the old way | |
+| The first fix went into ONE instance and a skill NOTE, never into the TOOL that does the action (e.g. an automation opened the wrong folder; an earlier fix changed one script and wrote a note, while the shared helper and other callers kept doing it). A note is not the producer: fix the tool every path goes through, and add a hook or check that blocks the old way | |
 | The fix SWAPPED the thing the user objected to for a look-alike (e.g. design pages: page screenshots → live scaled frames of the pages → a switcher strip above the page; "I'm still seeing screenshots", then "never include these top frames"). To the user it is the same thing whatever draws it. Fix = remove the whole category (the bare page, nothing added), never a new kind of wrapper | |
 
 When the signals can't be read, **treat it as a repeat**.
@@ -49,6 +49,12 @@ When the signals can't be read, **treat it as a repeat**.
 whole class** (lines → everything in the flow; "content text" → every content size in every
 mode) in the same fix — the narrow wording is the second producer.
 
+### A "it took N seconds" report the app left no trace of
+
+- **Trigger:** the report is a DELAY or a stall ("took about 15 seconds", "two windows opened after a while") and nothing records timings (no log, no trace), so the cause can't be proven from the code.
+- **Discrimination:** reading code and guessing ships a fix for the wrong cause; measuring a copy of the data proves only that ONE path is fast. In the case behind this rule, the database write measured 17 ms on a copy, yet the real stall was six overlapping reads at launch, 2.3–4.3 s each, which no code reading showed.
+- **Action:** in the same turn, add an EVENT-DRIVEN slow-step log (no timer, no background watcher): one line when an IPC call runs past a budget (exempt calls that wait on the network or a dialog), when a key reaches the page late (`performance.now() - e.timeStamp`), when a verb's handler runs long, and for each window open with the wait until it shows. Cap the file size. Fix what IS provable, and say plainly which cause is NOT found yet. Read the log after the next build: it often names the cause within minutes. For overlapping reads, the fix is one at a time with one rerun (`singleFlight`) plus "only the newest answer lands".
+
 ## 2. The permanent fix — all four, or it isn't permanent
 
 1. **Root cause at the ONE producer.** Find the single place the wrong thing is made (a
@@ -56,15 +62,15 @@ mode) in the same fix — the narrow wording is the second producer.
    one new component / function. Patching the screen in the screenshot is the failure mode.
 2. **Sweep every instance.** `grep` the whole codebase for the pattern; migrate all of them
    in the same change, not only the one reported. **Include the TWINS**: when a flow
-   has two paths (new item vs linked one; web vs native; edit vs preview mode),
-   the same defect or feature almost always exists on the other path, and fixing one path only
-   leaves the gap open on the other. Name the twin in the fix and give it the same test.
+   has two paths (new item vs existing one; web vs native; edit vs preview mode),
+   the same defect or feature almost always exists on the other path — three gaps in one day
+   came from fixing one path only. Name the twin in the fix and give it the same test.
    **The guard reads EVERY page and EVERY data state, never a hand-picked list.** *Trigger:* the
    guard you are writing or extending walks pages, screens or views (a phone-width check, a look test, a "words on a
-   card" scan). *Discrimination:* the phone test checked 7 hand-picked pages, so Filings and both fund pages scrolled
+   card" scan). *Discrimination:* the phone test checked 7 hand-picked pages, so three other pages scrolled
    sideways unseen; the look test read only the sample data and the List view, so an empty Today, an empty Pipeline
    and the Board view broke unseen; a missing page and an error page had no state in any test. *Action:* loop over the
-   app's shared every-page list (e.g. one `PAGES` list the e2e tests share), and add the states a sample can't reach as
+   app's shared every-page list (e.g. a `PAGES` export in `tests/e2e/pages.ts`), and add the states a sample can't reach as
    addresses: an empty filter (`?q=no-such-x`), each alternate view (`?view=board`), a missing address, a mistyped id.
    A state no test can reach (a whole empty database) gets one look in the screen review on a second server.
    The same holds for DATA a fix must reach: a sweep that rewrites stored links must
@@ -74,9 +80,9 @@ mode) in the same fix — the narrow wording is the second producer.
    Its first run found 6 columns a hand-written list had missed.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
    lint rule, a build-script check, or a hook. A note alone is not a guard. Pattern that
-   works (e.g. a `keycap.guard.test.ts`): a test that scans `src/**/*.tsx` for the banned
+   worked (a `keycap.guard.test.ts`): a test that scans `src/**/*.tsx` for the banned
    shape (raw `<kbd`, a chord printed as JSX text) and lists every offender with file:line.
-   Another pattern (e.g. a `rename.test.ts`): a test that scans source
+   Another pattern (a `rename.test.ts`): a test that scans source
    for banned lifecycle listeners (e.g. `addEventListener("blur"` or `.onblur` on inline rename
    elements) to prevent fragile synthetic commit triggers. Make the guard's failure message say
    what to use instead.
@@ -92,14 +98,13 @@ mode) in the same fix — the narrow wording is the second producer.
    `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
    `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
    installed app, so a failure leaves the working app in place. Keep window-showing code out of
-   that set, so running the guard never puts a window on screen: split a view class into its
-   own file. Prove the guard bites by compiling it
+   that set, so a test run never puts a window on screen: split a view class into its own file. Prove the guard bites by compiling it
    once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
    fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
    `NSLayoutManager` and compare rects), not only a source shape.
    **A size test is not a position test.** *Trigger:* the defect is about how two
    things line up (a word on a logo's baseline, a label beside an icon). *Discrimination:* the first lockup guard
-   checked only the font size, passed, and the header kept centering the wordmark on the logo's box; the user: "the logo text is
+   checked only the font size, passed, and the header kept centering the app name on the logo's box, and the report came back: "the logo text is
    still unaligned". *Action:* measure the relation itself in the browser: a zero-height marker inside the word for its
    baseline against the other element's edge, the font's own cap height (`measureText().actualBoundingBoxAscent`), after
    `document.fonts.ready`; prove the assumption it rests on (the logo's letters reach its bottom edge: 0 px, measured).
@@ -120,20 +125,20 @@ Verify with a **measurement**, not a look: geometry (`getBoundingClientRect` cen
 a failing-then-passing test, a count that went to zero.
 
 **A decision inherited from an older repo is unguarded when its test can't run in the new one.**
-*Trigger:* the repo was copied or grown from another (e.g. a shared engine folder copied from an earlier app), its `RECURRING.md`
+*Trigger:* the repo was copied or grown from another (e.g. a shared engine folder copied from a sibling app), its `RECURRING.md`
 carries the old repo's lines, and you are about to apply a general default (an accessibility norm, a library's
-recommended setting) or fix a symptom. *Discrimination:* the old repo had decided that the app ignores the Mac's
-Reduce Motion; the line sat in the new repo's ledger and its only test sat in the old repo's browser suite, which needs
-the old repo's data and had never run in the new one. A session fixed a "not glowing" status dot by obeying Reduce Motion,
-from habit, undoing a decision it should already have known. *Action:* (1) grep the ledger for the topic BEFORE choosing the fix, even when
+recommended setting) or fix a symptom. *Discrimination:* the older app had decided to ignore the Mac's
+Reduce Motion; the line sat in the new repo's ledger and its only test sat in the older app's browser suite, which needs
+that app's data and had never run in the new repo. A session fixed a "not glowing" status dot by obeying Reduce Motion,
+from habit, undoing a decision that was already made. *Action:* (1) grep the ledger for the topic BEFORE choosing the fix, even when
 the fix looks like a standard default; (2) for each old-repo decision whose guard cannot run here, add a guard that
-does (a source-scan unit test needs no data) and list the rest in the project CLAUDE.md, read
+does (a source-scan unit test runs for every firm with no data) and list the rest in the project CLAUDE.md, read
 every session; (3) name the old suite that doesn't run as work to port.
 
 **A look guard that reads an empty page is not a guard.** *Trigger:* a browser test checks how
-pages look (fonts, contrast, cards) on a made-up test copy of the data. *Discrimination:* the test data had no funds,
-deals or Tracking items, so "small labels are never in the heading font" passed on an empty Co-Investors page; the
-first real rows showed names in a tiny display font, an "Area" header and an empty picture slot.
+pages look (fonts, contrast, cards) on a made-up test copy of the data. *Discrimination:* the test data had no rows
+for several pages, so "small labels are never in the heading font" passed on an empty page; the
+first real rows showed names in a tiny heading font, a wrong column header and an empty picture slot.
 *Action:* give the test data at least a few rows for every page the look tests visit, and add rows whenever a page
 turns out empty; the same data serves the review copy the user looks at.
 
@@ -143,7 +148,7 @@ saved in a record. *Discrimination:* a "pictures in the review" fix was tested a
 never disappears, while 44 of 57 real pages were deleted with their scratchpads and worktrees before the weekend; the
 test passed and the review went back to text. *Action:* the guard deletes (or breaks) the resource the way production
 does, then checks the result still holds; when the resource is known to vanish, copy what you need at the moment it
-exists (e.g. keep pages and their pictures in a committed `design/kept/` folder), and make the fallback LOUD (a red line on the
+exists (e.g. keep pages and their pictures in a `design/kept/` folder), and make the fallback LOUD (a red line on the
 card), never a quiet degrade.
 
 **A test fed a message shape you INVENTED is not a guard.** *Trigger:* the code under test
@@ -154,7 +159,7 @@ the real daemon sends `"device": "Mac Mini 2024"`; every test passed, and in pro
 guess and still second best. *Action:* capture one real sample from the running producer (`curl` its state route,
 run the CLI) and use it as the fixture, or at least one fixture in that exact shape; name where it came from in a
 comment; prove the guard fails on the old code before calling the fix done.
-The same holds for a LAYOUT you never saw drawn: one test pinned the new
+The same holds for a LAYOUT you never saw drawn: an earlier test pinned the new
 Box shape exactly, passed, and pinned the very shape that overlapped on desktop; the harness has no pixels. When the
 test can't see the screen, the guard encodes a shape a sibling element ALREADY draws right in the user's screenshots (name
 it in the test's comment), never your new theory. Check the sibling has the same NEIGHBOURS too: a second
@@ -197,16 +202,12 @@ as counted). Then, briefly: why it kept recurring (the real cause), what now mak
 impossible (the producer + the guard), and the measurement.
 
 **A gap the fix leaves open carries its fix in the same breath.** *Trigger:* your report names
-something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a
-report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix leaves the user asking for the fix;
-a problem you state should come with its solution, briefly.
+something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a fix report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix
+leaves the user to ask for the solution; state a problem and its solution together, briefly.
 *Action:* small and safe → fix it before replying and report it as fixed; otherwise one line `❌ Not fixed: <what goes
-wrong>`, then your fix in one or two lines, then the question laid out simply (both options
+wrong>`, then your fix in one or two lines, then the question (both options
 named, a short table, answer words = column names). A fix that needs the user's OK first (a background watcher, a privacy
 setting) is still named, never left out.
-
-Tell the user where the written rule from the checklist was saved (file name + path, with a short before / now);
-never as Trigger / Discrimination / Action labels.
 
 ## 4. Ledger — after EVERY defect fix, repeat or not
 
