@@ -35,7 +35,7 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 - 🎯 **Fixes the source, not the screen** — the one tool every path uses, never a look-alike swap
 - 🧹 **Catches every copy** — every match, plus twins: new vs existing, web vs native
 - 🚨 **Guards that fail like production** — real data, every page, proven to fail on the old code
-- 📐 **Layout fixes checked both ways** — no new wrap, no new overflow, neighbors still in place
+- 📐 **Layout fixes measured, not eyeballed** — no new wrap or overflow, alignment checked in the browser
 - 📏 **Fixes the rule, not just the code** — widens rules that were too narrow, deletes templates the AI repeats
 - 🔬 **Reproduces before fixing again** — under real load, with a timing log for stalls
 
@@ -59,6 +59,8 @@ git clone https://github.com/adriangrantdotorg/recurring-issues-ai-skill.git ~/.
 | **[Claude Code](https://code.claude.com/docs/en/skills)** | `~/.claude/skills/` |
 | **[Cursor](https://cursor.com/docs/skills)** | `~/.cursor/skills/` |
 | **[ChatGPT & Codex](https://learn.chatgpt.com/docs/build-skills)** | `~/.agents/skills/` |
+
+**Tip:** add one line to your assistant's global instructions (for Claude Code, `~/.claude/CLAUDE.md`), such as "A defect reported a second time gets a permanent fix", so every session checks history first.
 
 ---
 
