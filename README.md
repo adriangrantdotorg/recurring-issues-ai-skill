@@ -17,9 +17,9 @@
 | | 😩 Without this Skill | 😌 With this Skill |
 | --- | :---: | :---: |
 | 🔁 Times you report the same bug | 🧪 3+ | **2** |
-| 🩹 Places a fix lands | one screen | **the source of the bug** |
-| 🚨 Tests that catch a comeback | 0 | **1+** |
-| 📒 Record of past fixes | none | **`RECURRING.md`** |
+| 🩹 Places a fix lands | 🧪 one screen | **the source of the bug** |
+| 🚨 Tests that catch a comeback | 🧪 0 | **1+** |
+| 📒 Record of past fixes | 🧪 none | **`RECURRING.md`** |
 
 <sub>🧪 estimate</sub>
 
@@ -31,7 +31,7 @@ Before fixing any bug, the AI checks whether it has been fixed before, and a rep
 
 ![The same repeat bug report with and without the skill: without it, the bug is patched, comes back and is patched again; with it, the AI checks history, fixes the source and adds a guard, and the bug is fixed for good](docs/media/with-vs-without-skill.svg)
 
-- 🔎 **Spots repeats on its own** — hears "again", checks the ledger and git log, even across flows
+- 🔎 **Spots repeats on its own** — hears "again", searches the ledger, git log, even sibling projects
 - 🎯 **Fixes the source, not the screen** — the one tool every path uses, never a look-alike swap
 - 🧹 **Catches every copy** — every match, plus twins: new vs existing, web vs native
 - 🚨 **Guards that fail like production** — real data, every page, proven to fail on the old code
@@ -70,7 +70,7 @@ Report bugs the way you normally do; the skill kicks in on its own.
 
 | You say | The skill makes |
 | --- | --- |
-| "The save button does nothing." | A **normal fix**, plus a first line in `RECURRING.md` so a repeat is caught |
+| "The save button does nothing." | A **tested fix** that covers look-alike code, plus a first line in `RECURRING.md` |
 | "The dropdown is cut off again." | A **permanent fix**: the source fixed, every copy swept, a test that fails if it returns |
 | "Find a permanent fix for the focus bug." | A **guard test** and a written rule that tells future sessions how to spot it |
 
