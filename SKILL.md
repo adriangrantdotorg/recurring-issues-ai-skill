@@ -81,9 +81,10 @@ lost for real later.
 
 **Steps 2 (twins) and 3 (a guard that fails) apply to EVERY defect fix, first report included.**
 *Trigger:* you are fixing any defect, new or repeat. *Discrimination:* repeats often come from a first fix that skipped these steps because the checklist ran only on
-second reports: a popup's width fix never looked at its twin, a hover pill with the same shape, which came back later;
-a toolbar clamp shipped with `guard: none`, and a later change (the bar hides while the mouse is down) broke it silently. A repeat still gets all four steps and the 🔁 report line. *Action:* before the ledger line,
-grep for the shape (not a hand list: a scan of every `position: fixed` rule can find many more boxes) and fix
+second reports: a link-bubble width fix never looked at its twin, a hovered-link pill with the same shape, which came
+back as "the URL types itself out"; a toolbar clamp shipped with `guard: none`, and a later change (the bar hides
+while the mouse is down) broke it silently. A repeat still gets all four steps and the 🔁 report line. *Action:* before the ledger line,
+grep for the shape (not a hand list: one scan of every `position: fixed` rule found 9 more boxes) and fix
 each twin in the same change; write a test that fails on the old code.
 
 1. **Root cause at the ONE producer.** Find the single place the wrong thing is made (a
@@ -99,7 +100,7 @@ each twin in the same change; write a test that fails on the old code.
    card" scan). *Discrimination:* the phone test checked 7 hand-picked pages, so Filings and both fund pages scrolled
    sideways unseen; the look test read only the sample data and the List view, so an empty Today, an empty Pipeline
    and the Board view broke unseen; a missing page and an error page had no state in any test. *Action:* loop over the
-   app's shared every-page list (for example one exported `PAGES` array), and add the states a sample can't reach as
+   app's shared every-page list (e.g. a `PAGES` array in `tests/e2e/pages.ts`), and add the states a sample can't reach as
    addresses: an empty filter (`?q=no-such-x`), each alternate view (`?view=board`), a missing address, a mistyped id.
    A state no test can reach (a whole empty database) gets one look in the screen review on a second server.
    The same holds for DATA a fix must reach: a sweep that rewrites stored links must
@@ -109,16 +110,16 @@ each twin in the same change; write a test that fails on the old code.
    Its first run found 6 columns a hand-written list had missed.
 3. **An automatic guard that FAILS on regression** — a unit test, a source-scanning test, a
    lint rule, a build-script check, or a hook. A note alone is not a guard. Pattern that
-   works: a test that scans `src/**/*.tsx` for the banned
+   worked (a `keycap.guard.test.ts`): a test that scans `src/**/*.tsx` for the banned
    shape (raw `<kbd`, a chord printed as JSX text) and lists every offender with file:line.
-   Another pattern: a test that scans source
+   Another pattern (a `web/test/rename.test.ts`): a test that scans source
    for banned lifecycle listeners (e.g. `addEventListener("blur"` or `.onblur` on inline rename
    elements) to prevent fragile synthetic commit triggers. Make the guard's failure message say
    what to use instead.
    **The guard stays inside the project that had the defect; a hook for every project is an ask.**
    *Trigger:* the guard you are about to build would run outside this project: a global hook, a new line in the
-   settings every session loads. *Discrimination:* a global hook built unasked changes every other project and session, which users
-   often don't want. A test or check in
+   settings every session loads. *Discrimination:* a global hook built unasked after one project's link defect changes every session the
+   user runs, and is often unwanted. A test or check in
    the project's own repo needs no ask. *Action:* build the project's guard; offer anything wider once, in one line,
    and build it only after a yes.
 
@@ -134,7 +135,7 @@ each twin in the same change; write a test that fails on the old code.
    `main.swift` when several files are passed to `swiftc`), compile it with the SMALLEST set of
    `Sources/*.swift` it needs, and run it from `build.sh` BEFORE the script deletes the
    installed app, so a failure leaves the working app in place. Keep window-showing code out of
-   that set: a test binary should never put a window on screen, so split a view class into
+   that set (a test binary should never put a window on screen), so split a view class into
    its own file. Prove the guard bites by compiling it
    once against the old file (`git show HEAD:Sources/X.swift > <scratch>/X.swift`): it must
    fail there and pass on the fix. Best of all is a MEASURED symptom (lay out with
@@ -160,8 +161,8 @@ each twin in the same change; write a test that fails on the old code.
    Run it on the old code first: it must name the reported text.
    **A size test is not a position test.** *Trigger:* the defect is about how two
    things line up (a word on a logo's baseline, a label beside an icon). *Discrimination:* the first lockup guard
-   checked only the font size, passed, and the header kept centering the wordmark on the logo's box, still visibly
-   unaligned. *Action:* measure the relation itself in the browser: a zero-height marker inside the word for its
+   checked only the font size, passed, and the header kept centering the wordmark on the logo's box, and the report came back: "the logo text is
+   still unaligned". *Action:* measure the relation itself in the browser: a zero-height marker inside the word for its
    baseline against the other element's edge, the font's own cap height (`measureText().actualBoundingBoxAscent`), after
    `document.fonts.ready`; prove the assumption it rests on (the logo's letters reach its bottom edge: 0 px, measured).
    **A guard on the reported symptom passes while the fix breaks a neighbour.** *Trigger:* you
@@ -181,12 +182,11 @@ Verify with a **measurement**, not a look: geometry (`getBoundingClientRect` cen
 a failing-then-passing test, a count that went to zero.
 
 **A decision inherited from an older repo is unguarded when its test can't run in the new one.**
-*Trigger:* the repo was copied or grown from another, its `RECURRING.md`
+*Trigger:* the repo was copied or grown from another (e.g. an `Engine/` folder copied from a sibling app), its `RECURRING.md`
 carries the old repo's lines, and you are about to apply a general default (an accessibility norm, a library's
-recommended setting) or fix a symptom. *Discrimination:* an older repo decided its app ignores the OS's
-Reduce Motion setting; the line sat in the new repo's ledger, but its only test sat in a browser suite that needs the
-old repo's data and never ran in the new one. A later fix for a "not glowing" status dot obeyed Reduce Motion from
-habit and undid the decision. *Action:* (1) grep the ledger for the topic BEFORE choosing the fix, even when
+recommended setting) or fix a symptom. *Discrimination:* the older app had decided it ignores the OS's Reduce Motion setting; the line sat in the new
+repo's ledger, but its only test sat in a browser suite that needs the older app's data and had never run in the new
+repo. A session fixed a "not glowing" status dot by obeying Reduce Motion, from habit, and undid the settled decision. *Action:* (1) grep the ledger for the topic BEFORE choosing the fix, even when
 the fix looks like a standard default; (2) for each old-repo decision whose guard cannot run here, add a guard that
 does (a source-scan unit test runs for every firm with no data) and list the rest in the project CLAUDE.md, read
 every session; (3) name the old suite that doesn't run as work to port.
@@ -201,10 +201,10 @@ copy), with its failure message naming what to use instead; keep the instance te
 
 **A look guard that reads an empty page is not a guard.** *Trigger:* a browser test checks how
 pages look (fonts, contrast, cards) on a made-up test copy of the data. *Discrimination:* the test data had no funds,
-deals or Tracking items, so "small labels are never in the heading font" passed on an empty Co-Investors page; the
-first real rows showed names in a tiny heading font, a wrong header and an empty picture slot.
+deals or Tracking items, so "small labels are never in the heading font" passed on an empty list page; the
+first real rows showed names in a tiny display font, a stray header and an empty picture slot.
 *Action:* give the test data at least a few rows for every page the look tests visit, and add rows whenever a page
-turns out empty; the same data serves the review copy a person looks at.
+turns out empty; the same data serves the review copy the user looks at.
 
 **A fix whose test can't fail the way production fails is not a guard.** *Trigger:* a fix
 depends on an outside resource being there later: a file in a scratchpad or worktree, a cache, a server, a page path
@@ -212,7 +212,7 @@ saved in a record. *Discrimination:* a "pictures in the review" fix was tested a
 never disappears, while 44 of 57 real pages were deleted with their scratchpads and worktrees before the weekend; the
 test passed and the review went back to text. *Action:* the guard deletes (or breaks) the resource the way production
 does, then checks the result still holds; when the resource is known to vanish, copy what you need at the moment it
-exists (for example, keep pages and their pictures in a folder of their own), and make the fallback LOUD (a red line on the
+exists (e.g. keep pages and their pictures in a `design/kept/` folder), and make the fallback LOUD (a red line on the
 card), never a quiet degrade.
 
 **A test fed a message shape you INVENTED is not a guard.** *Trigger:* the code under test
@@ -223,15 +223,16 @@ the real daemon sends `"device": "Mac Mini 2024"`; every test passed, and in pro
 guess and still second best. *Action:* capture one real sample from the running producer (`curl` its state route,
 run the CLI) and use it as the fixture, or at least one fixture in that exact shape; name where it came from in a
 comment; prove the guard fails on the old code before calling the fix done.
-The same holds for a LAYOUT you never saw drawn: a test pinned the new
+The same holds for a LAYOUT you never saw drawn: one test pinned the new
 Box shape exactly, passed, and pinned the very shape that overlapped on desktop; the harness has no pixels. When the
 test can't see the screen, the guard encodes a shape a sibling element ALREADY draws right in the user's screenshots (name
-it in the test's comment), never your new theory. Check the sibling has the same NEIGHBOURS too: a second
+it in the test's comment), never your new theory. Check the sibling has the same NEIGHBOURS too: the second
 fix copied the header's − ("a Button direct in its row draws right"), but the header had nothing above it and also
 overflowed, hidden by the band's scroll; the third report showed the real rule (lines of Buttons need a blank line
 between). Before copying, read the screenshot for the sibling's edges, not only its middle.
+- **Cross-boundary schema parity guard:** When one layer (e.g., Swift/TS UI) serializes shared JSON or IPC payloads read by another layer (e.g., Python/Node CLI), unit tests that construct their own hand-typed fixture dicts in the consumer will keep passing even while production falls back silently to defaults due to a mismatched field name (e.g., `"playlists"` vs `"order"`). The guard must assert key parity directly against the producer's serializer or parse a real sample produced by the upstream component.
 
-**A rule about what the AI's replies SAY: delete the template, and guard where running sessions are reached.** *Trigger:* the repeat is a line or phrase in the AI's chat replies that an instruction file asked for (a
+**A rule about what the AI's replies SAY: delete the template, and guard where running sessions are reached.** *Trigger:* the repeat is a line or phrase in Claude's chat replies that an instruction file asked for (a
 template sentence in CLAUDE.md, an output style, a skill). *Discrimination:* the first fix added an exception under the
 template ("skip it when the reply already lists the files"); a session that had loaded the file earlier never saw the
 exception, and even with it a ready-made sentence gets pasted by habit. Instruction files and the hook LIST load at
@@ -244,7 +245,7 @@ fixtures and a quoted mention of the line allowed, so it bites in running sessio
 production loads it.** *Trigger:* you fixed a hang, freeze or race by moving the
 named callers (two bridge calls off the main thread), and the same symptom comes back. *Discrimination:* the first fix
 held for the calls it moved, but the cause was a shared resource (the dispatch pool) every caller drew on; a name-list
-source scan missed a third caller reached through a shared entry point. A clean normal run proves nothing for a
+source scan missed a third caller reached through `SyncAllRun.shared.start`. A clean normal run proves nothing for a
 load-dependent bug. *Action:* reproduce under the real load (a burst of requests while the store change reloads every
 window), `sample` the stuck process and COUNT threads (100+ waiting = pool starvation, not one bad call), fix the
 shared mechanism, and add a runtime guard that recreates the load; keep any source scan only as a second guard.
@@ -263,7 +264,7 @@ suspecting the app; (3) keep a trace for every failed test (Playwright `trace: "
 network log; (4) before blaming a change for timeouts, read `uptime` and run the same tests on a build WITHOUT the
 change (a load average of 40 timed out 6 of 6 either way).
 
-**A fix that did not hold means your model of the bug is wrong: reproduce it where the user sees it
+**A fix that did not hold means your model of the bug is wrong: reproduce it where the USER sees it
 before writing another fix.** *Trigger:* a repeat report right after a fix you had
 "verified". *Discrimination:* the forward To-field cursor got three fixes in one day (Tab order, an
 inert frame, an activation repair), each passing a headless probe that could not show the symptom at
@@ -280,16 +281,15 @@ as counted). Then, briefly: why it kept recurring (the real cause), what now mak
 impossible (the producer + the guard), and the measurement.
 
 **A gap the fix leaves open carries its fix in the same breath.** *Trigger:* your report names
-something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a
-report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix leaves the user asking what the
-fix is; state a solution with every problem, briefly.
+something still wrong after the fix ("one gap remains", "still possible", "except when …"). *Discrimination:* a report that ends "⚠️ One gap remains: … the card can still get stuck" with no fix leaves
+the user asking what the fix is; a stated problem should come with a stated solution, briefly.
 *Action:* small and safe → fix it before replying and report it as fixed; otherwise one line `❌ Not fixed: <what goes
 wrong>`, then your fix in one or two lines, then the question (both options
 named, a short table, answer words = column names). A fix that needs the user's OK first (a background watcher, a privacy
 setting) is still named, never left out.
 
-Tell the user in plain words where the written rule from the checklist was saved (the file, and what it says before
-and now); never as Trigger / Discrimination / Action labels.
+Tell the user where the written rule from the checklist was saved (the file's name and path) and what it now does,
+in plain words; never as Trigger / Discrimination / Action labels.
 
 ## 4. Ledger — after EVERY defect fix, repeat or not
 
@@ -308,7 +308,3 @@ MM-DD-YY · <symptom keywords, the words the user would use> · <Nth> report · 
   into a detected repeat. A bare `guard: none` no longer passes: name why no test can run.
 - A line with `guard: none` whose count reaches 2 is the ledger telling you step 2 is due.
 
-## Where the rule lives
-
-Put a short rule in the agent's global instructions (for example `~/.claude/CLAUDE.md`): "A defect reported a
-SECOND time gets a PERMANENT fix". This skill is the playbook it points to.
